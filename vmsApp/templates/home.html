@@ -1,0 +1,92 @@
+{% extends "base.html" %} {% load humanize %} {% load customfilter %} {% block pageContent %}
+<style>
+    .link1{
+        color:black;
+        text-decoration: none;
+    }
+    .link1:hover {
+        color: green;
+    }
+</style>
+<!--Section: Content-->
+<section class="">
+    <h2 class="fw-bolder">Welcome, {{request.user.first_name}} {{request.user.last_name}}!</h2>
+    <hr>
+    <div class="row justify-content-center">
+        <div class="col-lg-6 col-md-4 col-sm-12 col-xs-12 card card-default rounded-0 shadow border border-gray">
+            <div class="card-body">
+                <div class="container-fluid">
+                    <div class="d-flex w-100 align-items-center">
+                        <div class="col-3">
+                            <i class="fs-1 text-secondary fa fa-users"></i>
+                        </div>
+                        <div class="col-9">
+                            <a class="link1" aria-current="page" href="{% url 'user-page' %}">
+                                <h1 class="text-center">{{users|intcomma}}</h2>
+                                    <h5 class="text-center"><b>Users</b></h5>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6 col-md-4 col-sm-12 col-xs-12 card card-default rounded-0 shadow border border-gray">
+            <div class="card-body">
+                <div class="container-fluid">
+                    <div class="d-flex w-100 align-items-center">
+                        <div class="col-3">
+                            <i class="fs-1 text-secondary fa fa-list"></i>
+                        </div>
+                        <div class="col-9">
+                            <a class="link1" aria-current="page" href="{% url 'department-page' %}">
+                                <h1 class="text-center">{{dapartments|intcomma}}</h2>
+                                    <h5 class="text-center"><b>Category</b></h5>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-6 col-md-4 col-sm-12 col-xs-12 card card-default rounded-0 shadow border border-gray">
+            <div class="card-body">
+                <div class="container-fluid">
+                    <div class="d-flex w-100 align-items-center">
+                        <div class="col-3">
+                            <i class="fs-1 text-secondary fa fa-users-cog"></i>
+                        </div>
+                        <div class="col-9">
+                            <a class="link1" aria-current="page" href="{% url 'visitor-page' %}">
+                                <h1 class="text-center">{{current_view_visit_log|intcomma}}</h2>
+                                    <h5 class="text-center"><b>Current Visitors</b></h5>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6 col-md-4 col-sm-12 col-xs-12 card card-default rounded-0 shadow border border-gray">
+            <div class="card-body">
+                <div class="container-fluid">
+                    <div class="d-flex w-100 align-items-center">
+                        <div class="col-3">
+                            <i class="fs-1 text-secondary fas fa-id-card"></i>
+                        </div>
+                        <div class="col-9">
+                            <a class="link1" aria-current="page" href="{% url 'visitor-page' %}">
+                                <h1 class="text-center">{{view_visit_log|intcomma}}</h2>
+                                    <h5 class="text-center"><b>Total Visitor of the day</b></h5>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+</div> {% endblock pageContent %} {% block ScriptBlock %}
+<script>
+</script>
+{% endblock ScriptBlock %}
