@@ -1,7 +1,7 @@
 {% extends 'base.html' %} {% load static %} {% block pageContent %}
 <section class="py-4">
     <div class="container">
-        <h3 class="fw-bolder text-center">Daily Vistor Logs Report</h3>
+        <h3 class="fw-bolder text-center">Daily Visitor Logs Report</h3>
         <center>
             <hr class="bg-primary opacity-100" style="height:3px" width="5%">
         </center>
@@ -9,22 +9,51 @@
             <div class="card-body">
                 <div class="container-fluid">
                     <fieldset class="p-2 border mb-4">
-                        <legend class="w-auto px-3">Filter</legend>
                         <form action="{% url 'report-page' %}" method="GET">
                             <div class="container-fluid">
-                                <div class="row align-items-end">
-                                    <div class="col-lg-4 col-md-6 col-sm-12 col-xs-12">
-                                        <label class="control-label" for="filter_date">Choose Date</label>
-                                        <input type="date" id="filter_date" class="form-control form-control-sm rounded-0" name="filter_date" value="{{filter_date|date:'Y-m-d'}}" required="required">
+                                <!-- Using d-flex for aligning items vertically -->
+                                <div class="row d-flex align-items-center">
+                                    <!-- Start Date Field -->
+                                    <div class="col-lg-4 col-md-6 col-sm-12 mb-2">
+                                        <label class="control-label" for="filter_date">Start Date</label>
+                                        <input type="date" id="filter_date" class="form-control form-control-sm rounded-0" name="filter_date" value="{{ate_added__gte|date:'Y-m-d'}}" required>
                                     </div>
-                                    <div class="col-lg-4 col-md-6 col-sm-12 col-xs-12">
-                                        <button class="btn btn-sm btn-primary rounded-0 bg-gradient-primary"><i class="fa fa-filter"></i> Filter</button>
-                                        <button class="btn btn-sm btn-light rounded-0 bg-gradient-light border" type="button" id="print"><i class="fa fa-print"></i> Print</button>
+
+                                    <!-- End Date Field -->
+                                    <div class="col-lg-4 col-md-6 col-sm-12 mb-2">
+                                        <label class="control-label" for="end_date">End Date</label>
+                                        <input type="date" id="end_date" class="form-control form-control-sm rounded-0" name="end_date" value="{{date_added__lte|date:'Y-m-d'}}" required>
+                                    </div>
+
+                                    <!-- Filter, Print, and Download Buttons -->
+                                    <div class="col-lg-6 col-md-12 col-sm-12 d-flex align-items-center">
+                                        <!-- Filter Button -->
+                                        <button class="btn btn-sm btn-primary rounded-0 bg-gradient-primary me-2">
+                                            <i class="fa fa-filter"></i> Filter
+                                        </button>
+
+                                        <!-- Print Button -->
+                                        <button class="btn btn-sm btn-light rounded-0 bg-gradient-light border me-2" type="button" id="print">
+                                            <i class="fa fa-print"></i> Print
+                                        </button>
+
+                                        <!-- Download Button with Dropdown -->
+                                        <div class="dropdown">
+                                            <button class="btn btn-sm btn-light rounded-0 bg-gradient-light border dropdown-toggle" type="button" id="download" data-bs-toggle="dropdown" aria-expanded="false">
+                                                <i class="fa fa-download"></i> Download
+                                            </button>
+                                            <ul class="dropdown-menu" aria-labelledby="download">
+                                                <li><a class="dropdown-item" href="{% url 'download_report' 'csv' %}">CSV</a></li>
+                                                <li><a class="dropdown-item" href="{% url 'download_report' 'excel' %}">Excel</a></li>
+                                            </ul>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </form>
                     </fieldset>
+
+                    <!-- Visitor Logs Table -->
                     <div id="printout">
                         <table class="table table-bordered table-striped" id="visitor-tbl">
                             <colgroup>
@@ -58,7 +87,8 @@
                                     <td>{{ visitor.address }}</td>
                                     <td>{{ visitor.reason }}</td>
                                 </tr>
-                                {% endfor %} {% if not visitors %}
+                                {% endfor %} 
+                                {% if not visitors %}
                                 <tr>
                                     <th class="text-center" colspan="7">No Data</th>
                                 </tr>
@@ -71,6 +101,7 @@
         </div>
     </div>
 </section>
+
 <noscript id="print-header">
 <div>
     <div class="d-flex align-items-center">
@@ -87,6 +118,20 @@
     <hr>
 </div>
 </noscript> {% endblock pageContent %} {% block ScriptBlock %}
+<!-- Include Flatpickr CSS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+
+<!-- Include Flatpickr JS -->
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
+<!-- Initialize Flatpickr -->
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        flatpickr("#filter_date, #end_date", {
+            dateFormat: "d/m/Y"  // Set the format to day/month/year
+        });
+    });
+</script>
 <script>
     $(function() {
         $('#printout table').find('td, th').addClass("align-middle px-1 py-1")

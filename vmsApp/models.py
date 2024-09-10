@@ -43,23 +43,7 @@ class Visitors(models.Model):
         verbose_name_plural = "List of Visit Logs"
 
     def __str__(self):
-        return str(f"{self.name}")
-
-#     # Assuming you have at least one department created
-# department = Departments.objects.first()
-
-# new_visitor = Visitors(
-#     department=department,
-#     name="John Doe",
-#     gender="Male",
-#     contact="1234567890",
-#     email="john@example.com",
-#     address="123 Street",
-#     reason="Meeting",
-#     status="checkin",
-#     date_added=datetime(2024, 9, 5, 12, 0, 0)  # Adding a specific date and time
-# )
-# new_visitor.save()    
+        return str(f"{self.name}")  
 
 def save_visitor(request):
     form = VisitorForm(request.POST)

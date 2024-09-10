@@ -11,7 +11,11 @@ from django.contrib.auth.decorators import login_required
 from django.utils import timezone
 from datetime import timedelta
 from vmsApp.models import Visitors
-
+import pandas as pd
+from openpyxl import Workbook
+from openpyxl.utils.dataframe import dataframe_to_rows
+from openpyxl.styles import NamedStyle
+from django.shortcuts import render
 
 def context_data(request):
     fullpath = request.get_full_path()
@@ -368,34 +372,6 @@ def delete_visitor(request, pk = None):
 
     return HttpResponse(json.dumps(resp), content_type="application/json")
 
-# @login_required
-# def report(request):
-#     from vmsApp.models import Visitors  # Move the import inside the function
-
-#     context = context_data(request)
-#     context['page'] = 'visitors'
-#     context['page_title'] = "Daily Visitor Logs Report"
-
-#     # Default to today's date if no filter_date is provided in the request.GET
-#     filter_date_str = request.GET.get('filter_date', None)
-
-#     if filter_date_str:
-#         filter_date = datetime.strptime(filter_date_str, "%Y-%m-%d").replace(
-#             hour=0, minute=0, second=0, microsecond=0
-#         )
-#     else:
-#         filter_date = datetime.now().replace(
-#             hour=0, minute=0, second=0, microsecond=0
-#         )
-
-#     context['filter_date'] = filter_date
-#     context['visitors'] = Visitors.objects.filter(
-#         date_added__gte=filter_date,
-#         date_added__lt=filter_date + timedelta(days=1)
-#     ).all()
-
-#     return render(request, 'report.html', context)
-
 
 @login_required
 def report(request):
@@ -403,11 +379,13 @@ def report(request):
     context['page'] = 'visitors'
     context['page_title'] = "Daily Visitor Logs Report"
 
-    # Default to today's date if no filter_date is provided in the request.GET
+    # Parse the start and end dates from the GET parameters (assuming 'd/m/Y' format)
     filter_date_str = request.GET.get('filter_date', None)
+    end_date_str = request.GET.get('end_date', None)
 
     if filter_date_str:
-        filter_date = timezone.datetime.strptime(filter_date_str, "%Y-%m-%d").replace(
+        # Parse dates using 'day/month/year' format
+        filter_date = timezone.datetime.strptime(filter_date_str, "%d/%m/%Y").replace(
             hour=0, minute=0, second=0, microsecond=0
         )
     else:
@@ -415,10 +393,104 @@ def report(request):
             hour=0, minute=0, second=0, microsecond=0
         )
 
+    if end_date_str:
+        end_date = timezone.datetime.strptime(end_date_str, "%d/%m/%Y").replace(
+            hour=23, minute=59, second=59, microsecond=999999
+        )
+    else:
+        end_date = filter_date + timedelta(days=1)
+
     context['filter_date'] = filter_date
+    context['end_date'] = end_date
+
+    # Filter visitors between the start and end date
     context['visitors'] = Visitors.objects.filter(
         date_added__gte=filter_date,
-        date_added__lt=filter_date + timedelta(days=1)
+        date_added__lte=end_date
     ).all()
 
     return render(request, 'report.html', context)
+
+# CSV Report Generation
+def generate_csv_report(request):
+    # Query all visitors without filtering
+    visitors = Visitors.objects.all()
+    
+    # Convert QuerySet to a list of dictionaries
+    data = visitors.values('name', 'gender', 'contact', 'email', 'address', 'reason', 'status', 'date_created', 'date_checkout')
+    
+    # Convert the data to a DataFrame
+    df = pd.DataFrame(list(data))
+
+    # Create an HTTP response with CSV content
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="visitor_logs.csv"'
+    
+    # Write the DataFrame to CSV
+    df.to_csv(path_or_buf=response, index=False)
+    
+    return response
+
+# Excel Report Generation
+def generate_excel_report(request):
+    # Query all visitors without filtering
+    visitors = Visitors.objects.all()
+    
+    # Convert QuerySet to a list of dictionaries
+    data = visitors.values('name', 'gender', 'contact', 'email', 'address', 'reason', 'status', 'date_created', 'date_checkout')
+    
+    # Convert the data to a DataFrame
+    df = pd.DataFrame(list(data))
+    
+    # Ensure datetimes are timezone-naive
+    if 'date_created' in df.columns:
+        df['date_created'] = df['date_created'].apply(lambda x: x.replace(tzinfo=None) if pd.notnull(x) else x)
+    if 'date_checkout' in df.columns:
+        df['date_checkout'] = df['date_checkout'].apply(lambda x: x.replace(tzinfo=None) if pd.notnull(x) else x)
+
+    # Create an HTTP response with Excel content
+    response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    response['Content-Disposition'] = 'attachment; filename="visitor_logs.xlsx"'
+    
+    # Create a workbook and add a worksheet
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Visitor Logs"
+    
+    # Define a style for date columns
+    date_style = NamedStyle(name='datetime', number_format='yyyy-mm-dd hh:mm:ss')
+    
+    # Write DataFrame to the worksheet
+    for r_idx, row in enumerate(dataframe_to_rows(df, index=False, header=True), 1):
+        for c_idx, value in enumerate(row, 1):
+            cell = ws.cell(row=r_idx, column=c_idx, value=value)
+            # Apply date formatting to date columns
+            if df.columns[c_idx-1] in ['date_created', 'date_checkout']:
+                cell.style = date_style
+
+    # Auto-adjust column widths
+    for col in ws.columns:
+        max_length = 0
+        column = col[0].column_letter
+        for cell in col:
+            try:
+                if len(str(cell.value)) > max_length:
+                    max_length = len(cell.value)
+            except:
+                pass
+        adjusted_width = (max_length + 2)
+        ws.column_dimensions[column].width = adjusted_width
+    
+    # Save the workbook to the HTTP response
+    wb.save(response)
+
+    return response
+
+# Combined view to handle both CSV and Excel downloads
+def download_report(request, format):
+    if format == 'csv':
+        return generate_csv_report(request)
+    elif format == 'excel':
+        return generate_excel_report(request)
+    else:
+        return HttpResponse('Invalid format', status=400)
