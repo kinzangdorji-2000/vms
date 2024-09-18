@@ -43,8 +43,8 @@
                                                 <i class="fa fa-download"></i> Download
                                             </button>
                                             <ul class="dropdown-menu" aria-labelledby="download">
-                                                <li><a class="dropdown-item" href="{% url 'download_report' 'csv' %}">CSV</a></li>
-                                                <li><a class="dropdown-item" href="{% url 'download_report' 'excel' %}">Excel</a></li>
+                                                <li><a class="dropdown-item" href="{% url 'download_report' 'csv' %}?filter_date={{ filter_date|date:'d/m/Y' }}&end_date={{ end_date|date:'d/m/Y' }}" class="btn btn-primary">CSV</a></li>
+                                                <li><a class="dropdown-item" href="{% url 'download_report' 'excel' %}?filter_date={{ filter_date|date:'d/m/Y' }}&end_date={{ end_date|date:'d/m/Y' }}" class="btn btn-primary">Excel</a></li>
                                             </ul>
                                         </div>
                                     </div>

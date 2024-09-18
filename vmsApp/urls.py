@@ -35,5 +35,5 @@ urlpatterns = [
     path('save_visitor',views.save_visitor,name='save-visitor'),
     path('delete_visitor/<int:pk>',views.delete_visitor,name='delete-visitor'),
     path('report',views.report,name='report-page'),
-    path('download-report/<str:format>/', download_report, name='download_report'),
+    path('report/download/<str:format>/', views.download_report, name='download_report'),
 ]+ static(settings.MEDIA_URL, document_root = settings.MEDIA_ROOT)
